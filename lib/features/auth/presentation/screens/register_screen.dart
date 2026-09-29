@@ -9,6 +9,7 @@ import 'package:lynko/core/validator/app_validator.dart';
 import 'package:lynko/features/auth/presentation/providers/auth_providers.dart';
 import 'package:lynko/features/auth/presentation/widgets/app_button.dart';
 import 'package:lynko/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:lynko/shared/custom_snack_bar.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -50,19 +51,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ref.listen<AsyncValue<void>>(registerControllerProvider, (previous, next) {
       next.whenOrNull(
         error: (error, stackTrace) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString()),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+          CustomSnackBar.show(
+            context,
+            message: error.toString(),
+            type: SnackBarType.error,
           );
         },
         data: (_) {
           if (previous?.isLoading ?? false) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Registration Successful!')),
+            CustomSnackBar.show(
+              context,
+              message: 'Registration Successful!',
+              type: SnackBarType.success,
             );
-            // Navigate to login or home page here
+            Navigator.pushNamed(context, AppRoutes.login);
           }
         },
       );
@@ -78,7 +80,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           Positioned.fill(
             child: Image.asset('assets/background.png', fit: BoxFit.cover),
           ),
-
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+              child: Text(
+                "Create an account",
+                style: TextStyle(
+                  fontSize: 19.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.black,
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(

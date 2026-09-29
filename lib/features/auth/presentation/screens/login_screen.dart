@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lynko/core/params/login_params.dart';
 import 'package:lynko/core/router/app_routes.dart';
 import 'package:lynko/core/utils/app_colors.dart';
 import 'package:lynko/core/validator/app_validator.dart';
+import 'package:lynko/features/auth/presentation/providers/auth_providers.dart';
 import 'package:lynko/features/auth/presentation/widgets/app_button.dart';
 import 'package:lynko/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:lynko/shared/custom_snack_bar.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -27,20 +31,64 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onLoginPressed() {
     if (_formKey.currentState?.validate() ?? false) {
-      // Logic will be added here later
+      final params = LoginParams(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      ref.read(loginControllerProvider.notifier).login(loginParams: params);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue>(loginControllerProvider, (previous, next) {
+      if (previous?.isLoading == true && !next.isLoading) {
+        next.when(
+          data: (_) {
+            CustomSnackBar.show(
+              context,
+              message: 'Login Successful!',
+              type: SnackBarType.success,
+            );
+            // Navigator.pushReplacementNamed(context, AppRoutes.main);
+          },
+          error: (error, stackTrace) {
+            CustomSnackBar.show(
+              context,
+              message: error.toString(),
+              type: SnackBarType.error,
+            );
+          },
+          loading: () {},
+        );
+      }
+    });
+
+    final loginState = ref.watch(loginControllerProvider);
+    final isLoading = loginState.isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.transparent,
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/background.png',
-              fit: BoxFit.cover,
+            child: Image.asset('assets/background.png', fit: BoxFit.cover),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 15.0,
+              ),
+              child: Text(
+                "Login with email",
+                style: TextStyle(
+                  fontSize: 19.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.black,
+                ),
+              ),
             ),
           ),
           SafeArea(
@@ -73,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 12),
                       AuthButton(
                         text: 'Login',
-                        isLoading: false,
+                        isLoading: isLoading,
                         onPressed: _onLoginPressed,
                       ),
                       const SizedBox(height: 12),
@@ -90,7 +138,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Navigator.pushReplacementNamed(context, AppRoutes.register);
+                              Navigator.pushReplacementNamed(
+                                context,
+                                AppRoutes.register,
+                              );
                             },
                             child: Text(
                               "Register",
