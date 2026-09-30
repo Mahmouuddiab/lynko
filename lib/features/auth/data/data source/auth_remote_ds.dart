@@ -1,3 +1,4 @@
+import 'package:lynko/core/cache/cache_helper.dart';
 import 'package:lynko/core/error/app_exception.dart';
 import 'package:lynko/core/network/api_constant.dart';
 import 'package:lynko/core/network/dio_helper.dart';
@@ -43,7 +44,9 @@ class AuthRemoteDsImpl implements AuthRemoteDs {
         data: {"email": loginParams.email, "password": loginParams.password},
       );
       if (response.statusCode == 200) {
-        return LoginModel.fromJson(response.data);
+        final user = LoginModel.fromJson(response.data);
+        await CacheHelper.saveToken(user.accessToken);
+        return user;
       } else {
         throw ServerException(response.data['message'] ?? 'Login failed');
       }

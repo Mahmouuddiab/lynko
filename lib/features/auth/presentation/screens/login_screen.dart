@@ -51,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               message: 'Login Successful!',
               type: SnackBarType.success,
             );
-            // Navigator.pushReplacementNamed(context, AppRoutes.main);
+             Navigator.pushReplacementNamed(context, AppRoutes.main);
           },
           error: (error, stackTrace) {
             CustomSnackBar.show(
