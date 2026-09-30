@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:lynko/core/cache/cache_helper.dart';
 
 class AuthInterceptor extends Interceptor {
@@ -11,28 +12,28 @@ class AuthInterceptor extends Interceptor {
 
     if (withAuth) {
       final token = await CacheHelper.getToken();
+      debugPrint('AUTH token present: ${token != null && token.isNotEmpty}');
 
       if (token != null && token.isNotEmpty) {
-        options.headers['token'] = token;
+        options.headers['Authorization'] = 'Bearer $token';
       }
     }
-
-    options.headers['Accept'] = 'application/json';
-    options.headers['Content-Type'] = 'application/json';
 
     handler.next(options);
   }
 
   @override
-  Future<void> onError(
-      DioException err,
-      ErrorInterceptorHandler handler,
+  Future<void> onResponse(
+      Response response,
+      ResponseInterceptorHandler handler,
       ) async {
-    if (err.response?.statusCode == 401) {
+    final withAuth = response.requestOptions.extra['withAuth'] == true;
+
+    if (response.statusCode == 401 && withAuth) {
       await CacheHelper.clearToken();
-      // Optionally handle navigation or session clearing here
+      // TODO: navigate to login (e.g. via a navigatorKey or a Riverpod session provider)
     }
 
-    handler.next(err);
+    handler.next(response);
   }
 }

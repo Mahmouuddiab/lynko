@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,29 +9,34 @@ import 'package:lynko/core/router/app_routes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   DioHelper.init(baseUrl: ApiConstants.baseUrl);
+  await EasyLocalization.ensureInitialized();
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      child: const ProviderScope(child: LynkoApp()),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class LynkoApp extends StatelessWidget {
+  const LynkoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(375, 812),
+      designSize: const Size(390, 844),
       minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return MaterialApp(
-          title: 'Lynko App',
-          debugShowCheckedModeBanner: false,
-          initialRoute: AppRoutes.register,
-          onGenerateRoute: AppRouter.generateRoute,
-        );
-      },
+      builder: (_, __) => MaterialApp(
+        title: 'Lynko',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+        initialRoute: AppRoutes.splash,
+        onGenerateRoute: AppRouter.generateRoute,
+      ),
     );
   }
 }
