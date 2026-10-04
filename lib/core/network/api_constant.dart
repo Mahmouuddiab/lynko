@@ -5,4 +5,7 @@ class ApiConstants {
   static const String register = '$baseUrl/api/Auth/register';
   static const String login = '$baseUrl/api/Auth/login';
   static const String profile = '$baseUrl/api/Auth/me';
+  static const String allUsers = '$baseUrl/api/chat/users';
+  static const String sendMessage = '$baseUrl/api/Chat/send';
+  static  String getMessage (int otherUserId) => '$baseUrl/api/Chat/conversation/$otherUserId';
 }
