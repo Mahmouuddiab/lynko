@@ -68,7 +68,6 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
 
-    // Avoid the logo popping in late on the first frame.
     await precacheImage(const AssetImage(_logoPath), context);
     if (!mounted) return;
 
@@ -82,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
         await _intro.forward().orCancel;
       }
     } on TickerCanceled {
-      return; // screen was disposed mid-animation
+      return;
     }
 
     final route = await routeFuture;
@@ -92,12 +91,9 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacementNamed(route);
   }
 
-  /// Startup logic: decide where to go next.
   Future<String> _resolveRoute() async {
-    // TODO: read the token from flutter_secure_storage, e.g.
      final token = await  CacheHelper.getToken();
      return token != null ? AppRoutes.main : AppRoutes.login;
-    return AppRoutes.login;
   }
 
   @override
@@ -134,7 +130,6 @@ class _SplashScreenState extends State<SplashScreen>
               children: [
                 const Spacer(flex: 3),
 
-                // Logo with pulsing glow
                 FadeTransition(
                   opacity: _logoFade,
                   child: ScaleTransition(
@@ -172,7 +167,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                 SizedBox(height: 8.h),
 
-                // App name
+
                 FadeTransition(
                   opacity: _textFade,
                   child: SlideTransition(
@@ -208,7 +203,6 @@ class _SplashScreenState extends State<SplashScreen>
 
                 const Spacer(flex: 3),
 
-                // Slim progress bar
                 FadeTransition(
                   opacity: _barFade,
                   child: AnimatedBuilder(

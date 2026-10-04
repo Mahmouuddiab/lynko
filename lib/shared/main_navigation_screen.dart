@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lynko/features/chat/presentation/screen/chat_screen.dart';
-import 'package:lynko/features/home/presentation/screens/home_screen.dart';
 import 'package:lynko/features/profile/presentation/screen/profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -15,17 +14,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   static const List<Widget> _appScreens = <Widget>[
-    HomeScreen(),
     ChatScreen(),
     ProfileScreen(),
   ];
 
   List<_NavItemData> get _navItems => [
-    _NavItemData(
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home_rounded,
-      label: 'Home',
-    ),
     _NavItemData(
       icon: Icons.chat_bubble_outline_rounded,
       activeIcon: Icons.chat_bubble_rounded,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lynko/core/router/app_routes.dart';
 import 'package:lynko/features/auth/presentation/screens/login_screen.dart';
 import 'package:lynko/features/auth/presentation/screens/register_screen.dart';
-import 'package:lynko/features/home/presentation/screens/home_screen.dart';
 import 'package:lynko/shared/main_navigation_screen.dart';
 import 'package:lynko/shared/splash_screen.dart';
 
@@ -24,12 +23,6 @@ class AppRouter {
           builder: (_) => const RegisterScreen(),
         );
 
-      case AppRoutes.home:
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => const HomeScreen(),
-        );
-
       case AppRoutes.main:
         return MaterialPageRoute(
           settings: settings,
@@ -38,9 +31,8 @@ class AppRouter {
 
       default:
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('Route not found')),
-          ),
+          builder: (_) =>
+              const Scaffold(body: Center(child: Text('Route not found'))),
         );
     }
   }

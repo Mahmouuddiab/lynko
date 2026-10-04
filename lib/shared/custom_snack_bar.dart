@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:lynko/core/utils/app_colors.dart';
 
-enum SnackBarType {
-  success,
-  error,
-}
+enum SnackBarType { success, error }
 
 class CustomSnackBar {
   static void show(
-      BuildContext context, {
-        required String message,
-        required SnackBarType type,
-      }) {
+    BuildContext context, {
+    required String message,
+    required SnackBarType type,
+  }) {
     final isSuccess = type == SnackBarType.success;
 
-    final color = isSuccess
-        ? AppColors.success
-        : AppColors.error;
+    final color = isSuccess ? AppColors.success : AppColors.error;
 
-    final icon = isSuccess
-        ? Icons.check_circle_outline
-        : Icons.error_outline;
+    final icon = isSuccess ? Icons.check_circle_outline : Icons.error_outline;
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -30,16 +23,10 @@ class CustomSnackBar {
           backgroundColor: Colors.transparent,
           elevation: 0,
           duration: const Duration(seconds: 3),
-          margin: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           padding: EdgeInsets.zero,
           content: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(14),
@@ -53,11 +40,7 @@ class CustomSnackBar {
             ),
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                Icon(icon, color: Colors.white, size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
