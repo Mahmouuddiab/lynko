@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lynko/features/chat/domain/entity/user_entity.dart';
 import 'package:lynko/features/chat/presentation/providers/chat_providers.dart';
+import 'package:lynko/features/chat/presentation/providers/unread_providers.dart';
 import 'package:lynko/features/chat/presentation/screen/chat_detail_screen.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -14,6 +15,25 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _searchController = TextEditingController();
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshUnread();
+    });
+  }
+
+  Future<void> _refreshUnread() async {
+    try {
+      final users = await ref.read(allUsersProvider.future);
+      await ref
+          .read(unreadCountsProvider.notifier)
+          .refresh(users.map((u) => u.id).toList());
+    } catch (_) {
+      // The users list shows its own error state.
+    }
+  }
 
   @override
   void dispose() {
@@ -34,11 +54,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _refresh() async {
     ref.invalidate(allUsersProvider);
     await ref.read(allUsersProvider.future);
+    await _refreshUnread();
   }
 
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(allUsersProvider);
+    final unreadCounts = ref.watch(unreadCountsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -83,7 +105,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         final user = filtered[index];
                         return UserTile(
                           user: user,
-                          onTap: () => _navigateToChatDetail(context, user),
+                          unreadCount: unreadCounts[user.id] ?? 0,
+                          onTap: () =>
+                              _navigateToChatDetail(context, user),
                         );
                       },
                     ),
@@ -102,8 +126,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _navigateToChatDetail(BuildContext context, UserEntity user) {
-     Navigator.push(context, MaterialPageRoute(builder: (_) => ChatDetailScreen(user: user)));
+  Future<void> _navigateToChatDetail(
+      BuildContext context,
+      UserEntity user,
+      ) async {
+    final unread = ref.read(unreadCountsProvider.notifier);
+
+    // Opening the chat marks it as read (locally and on the server).
+    unread.markRead(user.id);
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ChatDetailScreen(user: user)),
+    );
+
+    // Anything that arrived while the chat was open was already seen.
+    await unread.markRead(user.id);
   }
 }
 
@@ -158,12 +196,16 @@ class _SearchField extends StatelessWidget {
 class UserTile extends StatelessWidget {
   final UserEntity user;
   final VoidCallback onTap;
+  final int unreadCount;
 
   const UserTile({
     super.key,
     required this.user,
     required this.onTap,
+    this.unreadCount = 0,
   });
+
+  bool get _hasUnread => unreadCount > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +235,8 @@ class UserTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight:
+                          _hasUnread ? FontWeight.w800 : FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -202,18 +245,74 @@ class UserTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                          color: _hasUnread
+                              ? scheme.onSurface
+                              : scheme.onSurfaceVariant,
+                          fontWeight:
+                          _hasUnread ? FontWeight.w600 : FontWeight.w400,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chat_bubble_outline_rounded,
-                  size: 20,
-                  color: scheme.primary,
-                ),
+                const SizedBox(width: 8),
+                if (_hasUnread)
+                  UnreadBadge(count: unreadCount)
+                else
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 20,
+                    color: scheme.primary,
+                  ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Pill-shaped counter. Shows "99+" above 99.
+class UnreadBadge extends StatelessWidget {
+  final int count;
+
+  const UnreadBadge({super.key, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final label = count > 99 ? '99+' : '$count';
+
+    return Semantics(
+      label: '$count unread messages',
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        transitionBuilder: (child, animation) =>
+            ScaleTransition(scale: animation, child: child),
+        child: Container(
+          key: ValueKey(label),
+          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 7),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: scheme.onPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
             ),
           ),
         ),

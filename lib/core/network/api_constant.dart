@@ -7,5 +7,6 @@ class ApiConstants {
   static const String profile = '$baseUrl/api/Auth/me';
   static const String allUsers = '$baseUrl/api/chat/users';
   static const String sendMessage = '$baseUrl/api/Chat/send';
+  static  String markAsRead (int otherUserId) => '$baseUrl/api/Chat/mark-read/$otherUserId';
   static  String getMessage (int otherUserId) => '$baseUrl/api/Chat/conversation/$otherUserId';
 }

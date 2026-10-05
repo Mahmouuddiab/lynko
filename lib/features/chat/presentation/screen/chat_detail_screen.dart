@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lynko/features/chat/domain/entity/user_entity.dart';
@@ -168,9 +167,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen>
   }
 }
 
-// ==========================================
 // Sub-Widgets
-// ==========================================
 
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
