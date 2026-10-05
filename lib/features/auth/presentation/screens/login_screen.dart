@@ -30,6 +30,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _onLoginPressed() {
+    FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
       final params = LoginParams(
         email: _emailController.text.trim(),
@@ -51,7 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               message: 'Login Successful!',
               type: SnackBarType.success,
             );
-             Navigator.pushReplacementNamed(context, AppRoutes.main);
+            Navigator.pushReplacementNamed(context, AppRoutes.main);
           },
           error: (error, stackTrace) {
             CustomSnackBar.show(
@@ -70,97 +71,165 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.transparent,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset('assets/background.png', fit: BoxFit.cover),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 15.0,
-              ),
-              child: Text(
-                "Login with email",
-                style: TextStyle(
-                  fontSize: 19.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.black,
-                ),
-              ),
+      resizeToAvoidBottomInset: true,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset('assets/background.png', fit: BoxFit.cover),
             ),
-          ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 120.h),
-                      AuthTextField(
-                        label: 'Email',
-                        hint: 'Enter your email',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (_) =>
-                            AppValidator.email(_emailController.text),
-                      ),
-                      AuthTextField(
-                        label: 'Password',
-                        hint: 'Enter your password',
-                        controller: _passwordController,
-                        isPassword: true,
-                        validator: (_) =>
-                            AppValidator.password(_passwordController.text),
-                      ),
-                      const SizedBox(height: 12),
-                      AuthButton(
-                        text: 'Login',
-                        isLoading: isLoading,
-                        onPressed: _onLoginPressed,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        spacing: 5,
-                        children: [
-                          Text(
-                            "Don't have an account ?",
-                            style: TextStyle(
-                              color: AppColors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                AppRoutes.register,
-                              );
-                            },
-                            child: Text(
-                              "Register",
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 24.h,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 440),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(),
+                        SizedBox(height: 28.h),
+                        _buildFormCard(isLoading),
+                        SizedBox(height: 24.h),
+                        _buildRegisterRow(),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Container(
+          width: 76.w,
+          height: 76.w,
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(22.r),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+        ),
+        SizedBox(height: 22.h),
+        Text(
+          'Welcome back',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 28.sp,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+            color: AppColors.black,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          'Login with your email to continue',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: AppColors.black.withOpacity(0.6),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormCard(bool isLoading) {
+    return Container(
+      padding: EdgeInsets.all(22.w),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.88),
+        borderRadius: BorderRadius.circular(28.r),
+        border: Border.all(color: Colors.white.withOpacity(0.9), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 30,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AuthTextField(
+              label: 'Email',
+              hint: 'Enter your email',
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              validator: (_) => AppValidator.email(_emailController.text),
+            ),
+            AuthTextField(
+              label: 'Password',
+              hint: 'Enter your password',
+              controller: _passwordController,
+              isPassword: true,
+              validator: (_) => AppValidator.password(_passwordController.text),
+            ),
+            SizedBox(height: 16.h),
+            AuthButton(
+              text: 'Login',
+              isLoading: isLoading,
+              onPressed: _onLoginPressed,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRegisterRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "Don't have an account?",
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: AppColors.black.withOpacity(0.7),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        SizedBox(width: 6.w),
+        GestureDetector(
+          onTap: () {
+            Navigator.pushReplacementNamed(context, AppRoutes.register);
+          },
+          child: Text(
+            'Register',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
