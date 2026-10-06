@@ -1,8 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lynko/features/chat/domain/entity/user_entity.dart';
+import 'package:lynko/features/chat/presentation/providers/chat_providers.dart'
+    show attachmentPickerProvider;
 import 'package:lynko/features/chat/presentation/providers/conversation_provider.dart';
+import 'package:lynko/features/chat/presentation/services/attachment_picker.dart';
+import 'package:lynko/features/chat/presentation/widgets/attachment_sheet.dart';
+import 'package:lynko/features/chat/presentation/widgets/message_content.dart';
 import 'chat_screen.dart' show UserAvatar;
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
@@ -74,6 +80,56 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen>
     ref
         .read(conversationsProvider.notifier)
         .send(receiverId: widget.user.id, content: text);
+  }
+
+  Future<void> _onAttach() async {
+    final action = await showAttachmentSheet(context);
+    if (action == null || !mounted) return;
+
+    final picker = ref.read(attachmentPickerProvider);
+    final notifier = ref.read(conversationsProvider.notifier);
+    final receiverId = widget.user.id;
+
+    try {
+      PickedAttachment? file;
+
+      switch (action) {
+        case AttachmentAction.photo:
+          file = await picker.image(ImageSource.gallery);
+        case AttachmentAction.camera:
+          file = await picker.image(ImageSource.camera);
+        case AttachmentAction.video:
+          file = await picker.video(ImageSource.gallery);
+        case AttachmentAction.recordVideo:
+          file = await picker.video(ImageSource.camera);
+        case AttachmentAction.file:
+          file = await picker.file();
+        case AttachmentAction.location:
+          _toast('Getting your location…');
+          final loc = await picker.location();
+          await notifier.sendLocation(
+            receiverId: receiverId,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+          );
+          return;
+      }
+
+      if (file != null) {
+        await notifier.sendAttachment(receiverId: receiverId, file: file);
+      }
+    } on AttachmentException catch (e) {
+      _toast(e.message);
+    } catch (_) {
+      _toast('Something went wrong. Please try again.');
+    }
+  }
+
+  void _toast(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
   }
 
   void _retry(ChatMessage message) {
@@ -160,7 +216,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen>
               ),
             ),
           ),
-          _MessageInput(controller: _controller, onSend: _send),
+          _MessageInput(
+            controller: _controller,
+            onSend: _send,
+            onAttach: _onAttach,
+          ),
         ],
       ),
     );
@@ -169,7 +229,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen>
 
 // Sub-Widgets
 
-class _MessageBubble extends StatelessWidget {
+class _MessageBubble extends ConsumerWidget {
   final ChatMessage message;
   final VoidCallback? onRetry;
 
@@ -184,12 +244,17 @@ class _MessageBubble extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final mine = message.isMine;
     final bg = mine ? scheme.primary : scheme.surfaceContainerHighest;
     final fg = mine ? scheme.onPrimary : scheme.onSurface;
     final failed = message.status == MessageStatus.failed;
+
+    final progress =
+    ref.watch(uploadProgressProvider.select((p) => p[message.id]));
+    final uploading =
+        message.status == MessageStatus.sending && message.isUploadType;
 
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -214,10 +279,18 @@ class _MessageBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                message.text,
-                style: TextStyle(color: fg, fontSize: 15.5, height: 1.3),
-              ),
+              MessageContent(message: message, color: fg),
+              if (uploading) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 200,
+                  child: LinearProgressIndicator(
+                    value: progress, // null = indeterminate until the first tick
+                    backgroundColor: fg.withValues(alpha: 0.25),
+                    color: fg,
+                  ),
+                ),
+              ],
               const SizedBox(height: 4),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -265,8 +338,13 @@ class _MessageBubble extends StatelessWidget {
 class _MessageInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
+  final VoidCallback onAttach;
 
-  const _MessageInput({required this.controller, required this.onSend});
+  const _MessageInput({
+    required this.controller,
+    required this.onSend,
+    required this.onAttach,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -275,10 +353,15 @@ class _MessageInput extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+        padding: const EdgeInsets.fromLTRB(4, 6, 12, 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            IconButton(
+              onPressed: onAttach,
+              icon: const Icon(Icons.attach_file_rounded),
+              style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+            ),
             Expanded(
               child: TextField(
                 controller: controller,

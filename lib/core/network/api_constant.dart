@@ -9,4 +9,5 @@ class ApiConstants {
   static const String sendMessage = '$baseUrl/api/Chat/send';
   static  String markAsRead (int otherUserId) => '$baseUrl/api/Chat/mark-read/$otherUserId';
   static  String getMessage (int otherUserId) => '$baseUrl/api/Chat/conversation/$otherUserId';
+  static const String upload = '$baseUrl/api/Chat/upload';
 }

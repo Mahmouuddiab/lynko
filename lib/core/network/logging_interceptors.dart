@@ -3,6 +3,25 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 
 class LoggingInterceptor extends Interceptor {
+  /// Safe text for any request body. FormData (file uploads) can't be
+  /// JSON-encoded, so it is summarised instead of crashing the request.
+  String _describeBody(dynamic data) {
+    if (data is FormData) {
+      final fields = {for (final f in data.fields) f.key: f.value};
+      final files = [
+        for (final f in data.files)
+          '${f.key}: ${f.value.filename} (${f.value.length} bytes)',
+      ];
+      return 'FormData(fields: $fields, files: $files)';
+    }
+
+    try {
+      return const JsonEncoder.withIndent('  ').convert(data);
+    } catch (_) {
+      return data.toString();
+    }
+  }
+
   @override
   void onRequest(
       RequestOptions options,
@@ -19,7 +38,7 @@ class LoggingInterceptor extends Interceptor {
     }
 
     if (options.data != null) {
-      log('║ Body   : ${const JsonEncoder.withIndent('  ').convert(options.data)}');
+      log('║ Body   : ${_describeBody(options.data)}');
     }
 
     log('╚════════════════════════════════════════════════════════════');

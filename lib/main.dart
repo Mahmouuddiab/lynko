@@ -9,7 +9,7 @@ import 'package:lynko/core/router/app_routes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  DioHelper.init(baseUrl: ApiConstants.baseUrl);
+  DioHelper.init(baseUrl: ApiConstants.baseUrl,enableLogger: true);
   await EasyLocalization.ensureInitialized();
 
   runApp(

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'message_type.dart';
 
 class MessageEntity extends Equatable {
   final int id;
@@ -8,6 +9,14 @@ class MessageEntity extends Equatable {
   final DateTime sentAt;
   final bool isRead;
 
+  final MessageType type;
+  final String? mediaUrl;
+  final String? fileName;
+  final int? fileSizeBytes;
+  final int? durationSeconds;
+  final double? latitude;
+  final double? longitude;
+
   const MessageEntity({
     required this.id,
     required this.senderId,
@@ -15,6 +24,13 @@ class MessageEntity extends Equatable {
     required this.content,
     required this.sentAt,
     required this.isRead,
+    this.type = MessageType.text,
+    this.mediaUrl,
+    this.fileName,
+    this.fileSizeBytes,
+    this.durationSeconds,
+    this.latitude,
+    this.longitude,
   });
 
   @override
@@ -25,5 +41,12 @@ class MessageEntity extends Equatable {
     content,
     sentAt,
     isRead,
+    type,
+    mediaUrl,
+    fileName,
+    fileSizeBytes,
+    durationSeconds,
+    latitude,
+    longitude,
   ];
 }
