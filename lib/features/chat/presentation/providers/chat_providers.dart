@@ -5,7 +5,9 @@ import 'package:lynko/features/chat/domain/entity/user_entity.dart';
 import 'package:lynko/features/chat/domain/repository/chat_repository.dart';
 import 'package:lynko/features/chat/domain/usecase/all_users_usecase.dart';
 import 'package:lynko/features/chat/domain/usecase/get_conversation_usecase.dart';
+import 'package:lynko/features/chat/domain/usecase/send_attachment_use_case.dart';
 import 'package:lynko/features/chat/domain/usecase/send_message_use_case.dart';
+import 'package:lynko/features/chat/presentation/services/attachment_picker.dart';
 import '../../data/data source/chat_remote_ds.dart';
 
 // ==========================================
@@ -38,6 +40,15 @@ final sendMessageUseCaseProvider = Provider<SendMessageUseCase>((ref) {
 final getConversationUseCaseProvider = Provider<GetConversationUseCase>((ref) {
   final repository = ref.watch(chatRepositoryProvider);
   return GetConversationUseCase(repository);
+});
+
+final sendAttachmentUseCaseProvider = Provider<SendAttachmentUseCase>((ref) {
+  final repository = ref.watch(chatRepositoryProvider);
+  return SendAttachmentUseCase(repository);
+});
+
+final attachmentPickerProvider = Provider<AttachmentPicker>((ref) {
+  return AttachmentPicker();
 });
 
 // ==========================================

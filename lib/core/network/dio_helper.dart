@@ -128,15 +128,21 @@ class DioHelper {
     required FormData formData,
     Map<String, dynamic>? query,
     bool withAuth = false,
+    void Function(int sent, int total)? onSendProgress,
+    Duration? sendTimeout,
+    Duration? receiveTimeout,
   }) async {
     try {
       return await _dio.post(
         path,
         data: formData,
         queryParameters: query,
+        onSendProgress: onSendProgress,
         options: Options(
           extra: {'withAuth': withAuth},
           contentType: 'multipart/form-data',
+          sendTimeout: sendTimeout,
+          receiveTimeout: receiveTimeout,
         ),
       );
     } catch (e, st) {
